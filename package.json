@@ -1,0 +1,17 @@
+{
+  "name": "netclarowifi",
+  "version": "2.1.0",
+  "description": "Automacao de login no Claro Wi-Fi",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "puppeteer": "^24.16.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.10"
+  }
+}
