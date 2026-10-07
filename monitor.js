@@ -40,9 +40,19 @@ try {
 
     if (response.status === 200) {
 
+        const text = await response.text()
+
+        if (text.trim() === 'Microsoft Connect Test') {
+            return { connected: true, captivePortal: false }
+        }
+
+        // Status 200, mas conteúdo não bate — provavelmente portal interceptando
+        console.log('=> Status 200 mas conteúdo inesperado — possível portal cativo sem redirect.')
+
         return {
-            connected: true,
-            captivePortal: false
+            connected: false,
+            captivePortal: true,
+            portalUrl: response.url  // usa a URL final após qualquer redirecionamento seguido
         }
 
     }
