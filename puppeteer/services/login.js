@@ -1,51 +1,25 @@
 const { verifyConnection } = require('./verify')
-const { detectPortalUrl } = require('../../detect-portal-url')
+
+const TEST_URL =
+'http://www.msftconnecttest.com/connecttest.txt'
 
 async function login(page) {
 
 console.log('=> Abrindo portal Claro Wi-Fi...')
-
-
-/*
- * Detecta a URL dinâmica atual da Claro.
- *
- * Essa URL contém os dados da sessão atual,
- * incluindo user_id e AP.
- */
-
-const portalUrl = await detectPortalUrl()
-
-
-if (!portalUrl) {
-
-    throw new Error(
-        'Não foi possível detectar o portal Claro Wi-Fi.'
-    )
-
-}
-
-
-console.log('')
-console.log('=> Portal detectado!')
-console.log(`=> URL do portal: ${portalUrl}`)
-console.log('=> Abrindo URL dinâmica do portal...')
+console.log(`=> Navegando até a URL de teste: ${TEST_URL}`)
 console.log('')
 
-
 /*
- * Não usamos networkidle0/networkidle2 aqui.
- *
- * O portal da Claro pode manter conexões abertas
- * e isso fazia o Puppeteer esperar até atingir timeout.
- *
- * domcontentloaded é suficiente para começarmos
- * a procurar os elementos do formulário.
+ * Deixamos o próprio Chrome navegar e seguir
+ * qualquer tipo de redirecionamento (HTTP, meta-refresh,
+ * JavaScript) — muito mais robusto que detectar só
+ * redirecionamentos HTTP "de livro-texto" via Node puro.
  */
 
 try {
 
     await page.goto(
-        portalUrl,
+        TEST_URL,
         {
             waitUntil: 'domcontentloaded',
             timeout: 15000
@@ -54,17 +28,7 @@ try {
 
 } catch (error) {
 
-    /*
-     * Se o timeout acontecer, verificamos se a página
-     * chegou a carregar mesmo assim.
-     *
-     * Em captive portals isso pode acontecer porque
-     * existem requisições que continuam abertas.
-     */
-
-    if (
-        error.name === 'TimeoutError'
-    ) {
+    if (error.name === 'TimeoutError') {
 
         console.log(
             '=> Aviso: carregamento demorou mais que o esperado.'
@@ -82,10 +46,24 @@ try {
 
 }
 
+const portalUrl = page.url()
 
 console.log(
-    `=> URL atual: ${page.url()}`
+    `=> URL atual após navegação: ${portalUrl}`
 )
+
+if (portalUrl === TEST_URL || portalUrl.startsWith('http://www.msftconnecttest.com')) {
+
+    throw new Error(
+        'Não houve redirecionamento — a conexão já pode estar liberada, ou o portal não respondeu.'
+    )
+
+}
+
+console.log('')
+console.log('=> Portal detectado!')
+console.log(`=> URL do portal: ${portalUrl}`)
+console.log('')
 
 
 /*
@@ -284,10 +262,6 @@ await page.click(
     'button.cp-btn.cp-btn-primary.cp-connected__btn'
 )
 
-
-/*
- * Aguarda a Claro concluir a liberação.
- */
 
 await new Promise(
     resolve => setTimeout(resolve, 5000)
