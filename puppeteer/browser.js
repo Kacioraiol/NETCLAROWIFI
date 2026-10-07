@@ -8,11 +8,15 @@ async function setupBrowser(portalUrl) {
 
 console.log('=> Iniciando Chrome...')
 
+const headless =
+    String(process.env.DEBUG_BROWSER).toLowerCase() !== 'true'
+    // DEBUG_BROWSER=true no .env para ver as abas durante testes.
+    // Por padrão (produção), roda headless e fecha sozinho.
 
 const browser =
     await puppeteer.launch({
 
-        headless: false,
+        headless,
 
         executablePath: CHROME_PATH,
 
@@ -44,6 +48,12 @@ try {
         portalUrl
     )
 
+    console.log('=> Login concluído, fechando o navegador...')
+
+    await browser.close()
+
+    console.log('=> Navegador fechado.')
+
 
 } catch (error) {
 
@@ -56,21 +66,28 @@ try {
     console.error(error)
 
 
-    await page.screenshot({
+    try {
 
-        path: 'login-error.png',
+        await page.screenshot({
+            path: 'login-error.png',
+            fullPage: true
+        })
 
-        fullPage: true
+    } catch (screenshotError) {
 
-    })
+        console.error('=> Falha ao salvar screenshot:', screenshotError.message)
+
+    }
+
+
+    console.log('=> Fechando o navegador após erro...')
+
+    await browser.close()
 
 
     throw error
 
 }
-
-
-return browser
 
 }
 
