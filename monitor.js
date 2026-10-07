@@ -100,51 +100,37 @@ try {
 async function performLogin(portalUrl) {
 
 if (loginRunning) {
-
-    console.log(
-        '=> Login já está em andamento.'
-    )
-
+    console.log('=> Login já está em andamento.')
     return
-
 }
-
 
 loginRunning = true
 
+const TIMEOUT_MS = 90000  // 90 segundos de margem de segurança
 
 try {
 
     console.log('')
-
-    console.log(
-        '========================================'
-    )
-
-    console.log(
-        '      INICIANDO AUTENTICACAO'
-    )
-
-    console.log(
-        '========================================'
-    )
-
+    console.log('========================================')
+    console.log('      INICIANDO AUTENTICACAO')
+    console.log('========================================')
     console.log('')
 
-
-    await setupBrowser(portalUrl)
-
+    await Promise.race([
+        setupBrowser(portalUrl),
+        new Promise((_, reject) =>
+            setTimeout(
+                () => reject(new Error('Timeout: login não concluiu em 90s')),
+                TIMEOUT_MS
+            )
+        )
+    ])
 
 } catch (error) {
 
     console.error('')
-
-    console.error(
-        '=> Erro durante login:'
-    )
-
+    console.error('=> Erro durante login:')
     console.error(error)
-
 
 } finally {
 
